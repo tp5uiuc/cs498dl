@@ -1,0 +1,185 @@
+#+TITLE: Assignment 1
+#+SUBTITLE: CS498DL, Spring 2021
+#+OPTIONS:   H:2 num:t toc:nil date:nil ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER:\usepackage{cleveref}
+#+LATEX_HEADER:\newcommand{\gv}[1]{\ensuremath{\mbox{\boldmath$ #1 $}}}
+#+LATEX_HEADER:\newcommand{\bv}[1]{\ensuremath{\boldsymbol{#1}}}
+#+LATEX_HEADER:\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+#+LATEX_HEADER:\newcommand{\imag}[1]{\mathrm{Im} \left[ #1 \right]}
+#+LATEX_HEADER:\newcommand{\order}[1]{\mathcal O \left( #1 \right)}
+#+LATEX_HEADER:\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+#+LATEX_HEADER:\usepackage{setspace}
+#+LATEX_HEADER:\onehalfspacing
+#+LATEX_CLASS_OPTIONS: [11pt]
+#+LATEX_HEADER:\setminted[powershell]{fontsize=\footnotesize}
+#+LATEX_HEADER:\usepackage[lmargin=0.8in, rmargin=0.8in, tmargin=0.8in, bmargin=0.8in]{geometry}
+#+LATEX_HEADER:\newcommand{\cpp}{\texttt{C++} }
+#+LATEX_HEADER:\definecolor{violet}{RGB}{89,99,225}
+#+LATEX_HEADER:\newcommand{\newcontent}[1]{\textcolor{violet}{#1}}
+
+* Team details
+  | Name                    | NetID            | School | Teamname on Kaggle leaderboard |
+  |-------------------------+------------------+--------+--------------------------------|
+  | Parthasarathy, Tejaswin | tp5@illinois.edu | UIUC   | BennyHarvey                    |
+
+* Implementation
+:PROPERTIES:
+:CUSTOM_ID: sec:impl
+:END:
+  For all the models shown below, we provide options to tune the learning rate
+  \( \alpha \), number of epochs \( n\), batch size \( b \), regularization
+  parameter \( \lambda \)  (only for SVM and softmax models) and a learning rate
+  decay function \( f_\alpha \). The decay functions implemented are of the form
+ \[ \alpha_{i} = \alpha_{i - 1} * f_{\alpha} (i) \]
+  where the subscript \( i \) denotes the integral index of the current epoch \( \in [1,
+  n) \). f_{\alpha} is a monotonic decreasing function such that \( f_{\alpha} : [1,
+  n) \mapsto (0.0, 1.0] \). As such, we implement four different functional
+  forms for f_{\alpha}:
+  - \( f_{\textrm{const}} \), constant independent of \( i \)
+  - \( f_{\textrm{linear}} \), linearly decreasing
+  - \( f_{\textrm{exp}} \), exponentially decreasing
+  - \( f_{\textrm{cos}} \), decreasing with a sinusoidal profile.
+
+  For all the models, we carry out an extensive search for the best model in
+  the input design space \( \mathcal{R}_{\alpha} \times \mathcal{R}_{n} \times
+  \mathcal{R}_{b} \times \mathcal{R}_{\lambda} \times \mathcal{R}_{{f}_{\alpha}} \),
+  where \( \mathcal{R} \) denotes the search range. We then record the
+  training, validation and test accuracy of the model and the total time taken
+  for training. We repeat these recordings for a total of 3 times to ensure
+  statistically accurate results. We then look for the parameters with the best output /fitness/,
+  which only considers the test accuracy and time taken. The code for this search can
+  be found in the notebook, and we only include the best obtained results here.
+
+* Perceptron
+** Mushroom dataset
+   We first manually found a coarse range of values to feed into the phase space for
+   finer search. We list them below
+   - \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   - \( \mathcal{R}_{n} := [5, 10, 20] \)
+   - \( \mathcal{R}_{b} := [10, 20, 50] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                | Value                                                              |
+  |-------------------------+--------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 1.0, n = 10, b = 10, f_\alpha = f_{\textrm{linear}} \) |
+  | Training accuracy       | 95.75                                                              |
+  | Validation accuracy     | 95.45                                                              |
+  | Test accuracy           | 95.75                                                              |
+
+** CIFAR dataset
+  We first manually founnd a coarse range of values to feed into the phase space for
+  finer search. We list the ranges below
+   - \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   - \( \mathcal{R}_{n} := [5, 8, 10, 15] \)
+   - \( \mathcal{R}_{b} := [200, 500, 1000, 2000, 5000] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                |                                                               Value |
+  |-------------------------+---------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 2.0, n = 5, b = 2000, f_\alpha = f_{\textrm{linear}} \) |
+  | Training accuracy       |                                                               39.13 |
+  | Validation accuracy     |                                                               36.91 |
+  | Test accuracy           |                                                               37.36 |
+
+* SVM
+** Mushroom dataset
+   We first manually found a coarse range of values to feed into the phase space for
+   finer search. We list them below
+   - \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   - \( \mathcal{R}_{n} := [5, 10, 20] \)
+   - \( \mathcal{R}_{b} := [10, 20, 50] \)
+   - \( \mathcal{R}_{\lambda} := [5.0, 10.0] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                |                                                                           Value |
+  |-------------------------+---------------------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 0.5, n = 20, b = 20, \lambda = 5, f_\alpha = f_{\textrm{linear}} \) |
+  | Training accuracy       |                                                                           96.32 |
+  | Validation accuracy     |                                                                           96.43 |
+  | Test accuracy           |                                                                           96.55 |
+
+** CIFAR dataset
+  We first manually founnd a coarse range of values to feed into the phase space for
+  finer search. We list the ranges below
+   - \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   - \( \mathcal{R}_{n} := [5, 10, 15] \)
+   - \( \mathcal{R}_{b} := [200, 500, 1000, 2000, 5000] \)
+   - \( \mathcal{R}_{\lambda} := [500.0, 1000.0] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                |                                                                              Value |
+  |-------------------------+------------------------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 1.0, n = 5, b = 1000, \lambda = 500, f_\alpha = f_{\textrm{linear}} \) |
+  | Training accuracy       |                                                                              39.93 |
+  | Validation accuracy     |                                                                              37.35 |
+  | Test accuracy           |                                                                              37.27 |
+
+* Softmax
+** Mushroom dataset
+   We first manually found a coarse range of values to feed into the phase space for
+   finer search. We list them below
+   + \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   + \( \mathcal{R}_{n} := [500, 10, 20] \)
+   + \( \mathcal{R}_{b} := [5, 10, 20] \)
+   + \( \mathcal{R}_{\lambda} := [1.0, 5.0] \)
+   + All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                |                                                                               Value |
+  |-------------------------+-------------------------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 0.5, n = 100, b = 5, \lambda = 1.0, f_\alpha = f_{\textrm{constant}} \) |
+  | Training accuracy       |                                                                               94.15 |
+  | Validation accuracy     |                                                                               93.41 |
+  | Test accuracy           |                                                                               93.47 |
+
+** CIFAR dataset
+  We first manually founnd a coarse range of values to feed into the phase space for
+  finer search. We list the ranges below
+   - \( \mathcal{R}_{\alpha} := [0.05, 0.5, 2.0] \)
+   - \( \mathcal{R}_{n} := [10, 20, 30] \)
+   - \( \mathcal{R}_{b} := [100, 500] \)
+   - \( \mathcal{R}_{\lambda} := [0.05, 0.5, 5.0] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                |                                                                                Value |
+  |-------------------------+--------------------------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 2.0, n = 30, b = 500, \lambda = 5.0, f_\alpha = f_{\textrm{constant}} \) |
+  | Training accuracy       |                                                                                32.33 |
+  | Validation accuracy     |                                                                                29.90 |
+  | Test accuracy           |                                                                                30.70 |
+
+* Logistic
+** Mushroom dataset
+   We first manually found a coarse range of values to feed into the phase space for
+   finer search. We list them below
+   - \( \mathcal{R}_{\alpha} := [0.5, 1.0, 2.0] \)
+   - \( \mathcal{R}_{n} := [5, 10, 20] \)
+   - \( \mathcal{R}_{b} := [10, 20, 50] \)
+   - All functional forms listed in [[ref:sec:impl]]
+
+   A finer sweep within this search space revealed the following optimal hyperparameters:
+
+  | Category                | Value                                                              |
+  |-------------------------+--------------------------------------------------------------------|
+  | Optimal hyperparameters | \( \alpha = 0.5, n = 10, b = 10, f_\alpha = f_{\textrm{linear}} \) |
+  | Training accuracy       | 95.91                                                              |
+  | Validation accuracy     | 95.63                                                              |
+  | Test accuracy           | 95.81                                                              |
+
+  # | Category                | Value |
+  # |-------------------------+-------|
+  # | Optimal hyperparameters |       |
+  # | Training accuracy       |       |
+  # | Validation accuracy     |       |
+  # | Test accuracy           |       |
