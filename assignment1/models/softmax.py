@@ -41,15 +41,17 @@ class Softmax:
             predicted_score = self.w @ X_train.T
             predicted_probabilities = softmax(predicted_score)
 
-            # predicted_probability_for_correct_class = np.choose(
-            #     y_train, predicted_probabilities
-            # )
+            predicted_probability_for_correct_class = np.choose(
+                y_train, predicted_probabilities
+            )
 
             # instead of excluding the correct class, we include it but subtract
             # 1.0 for each
             # add a small number so that log doesn't compplain
-            # misclassification_loss = -np.log(predicted_probability_for_correct_class)
-            misclassification_loss = -np.log(np.amax(predicted_probabilities, axis=0))
+            misclassification_loss = -np.log(
+                predicted_probability_for_correct_class + 1e-12
+            )
+            # misclassification_loss = -np.log(np.amax(predicted_probabilities, axis=0))
             return (
                 0.5 * reg_const * regularization_loss / self.n_training
                 + np.sum(misclassification_loss) / y_train.shape[0]
