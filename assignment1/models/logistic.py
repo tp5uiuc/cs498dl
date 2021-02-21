@@ -30,9 +30,9 @@ class Logistic:
         # p() = sigmoid ((1 - 2y_i) * w * x)
         def logistic_loss(X_train: np.ndarray, y_train: np.ndarray) -> np.ndarray:
             misclassification_loss = -np.log(
-                self.sigmoid((1.0 - 2.0 * y_train) * (self.w @ X_train.T))
+                self.sigmoid((1.0 - 2.0 * y_train) * (self.w @ X_train.T)) + 1e-12
             )
-            return np.sum(misclassification_loss + 1e-12) / y_train.shape[0]
+            return np.sum(misclassification_loss) / y_train.shape[0]
 
         self.loss = logistic_loss
 
@@ -50,7 +50,12 @@ class Logistic:
         Returns:
             the sigmoid of the input
         """
-        return 1.0 / (1.0 + np.exp(-z))
+        hz = np.heaviside(z, 0.0)
+        neg_sz = 1.0 - 2.0 * hz
+        op = np.exp(neg_sz * z)
+        num = hz * (1.0) + (1.0 - hz) * op
+        return num / (1.0 + op)
+        # return 1.0 / (1.0 + np.exp(-z))
 
     def calc_gradient(self, X_train: np.ndarray, y_train: np.ndarray) -> np.ndarray:
         """Calculate gradient of the svm hinge loss.
