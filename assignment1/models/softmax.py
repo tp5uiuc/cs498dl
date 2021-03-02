@@ -3,11 +3,74 @@
 import numpy as np
 from typing import Callable
 
+from numpy.testing import assert_allclose
+
 
 def softmax(X):
     # assume classes along axis = 0 and examples along axis = -1
     exps = np.exp(X - np.amax(X, axis=0))
     return exps / np.sum(exps, axis=0)
+
+
+def softmax_loss_naive(W, X, y, reg):
+    """
+    Softmax loss function, naive implementation (with loops)
+    Inputs:
+    - W: C x D array of weights
+    - X: D x N array of data. Data are D-dimensional columns
+    - y: 1-dimensional array of length N with labels 0...K-1, for K classes
+    - reg: (float) regularization strength
+    Returns:
+    a tuple of:
+    - loss as single float
+    - gradient with respect to weights W, an array of same size as W
+    """
+    # Initialize the loss and gradient to zero.
+    loss = 0.0
+    dW = np.zeros_like(W)
+
+    #############################################################################
+    # Compute the softmax loss and its gradient using explicit loops.           #
+    # Store the loss in loss and the gradient in dW. If you are not careful     #
+    # here, it is easy to run into numeric instability. Don't forget the        #
+    # regularization!                                                           #
+    #############################################################################
+
+    # Get shapes
+    num_classes = W.shape[0]
+    num_train = X.shape[1]
+
+    for i in range(num_train):
+        # Compute vector of scores
+        f_i = W.dot(X[:, i])  # in R^{num_classes}
+
+        # Normalization trick to avoid numerical instability, per http://cs231n.github.io/linear-classify/#softmax
+        log_c = np.max(f_i)
+        f_i -= log_c
+
+        # Compute loss (and add to it, divided later)
+        # L_i = - f(x_i)_{y_i} + log \sum_j e^{f(x_i)_j}
+        sum_i = 0.0
+        for f_i_j in f_i:
+            sum_i += np.exp(f_i_j)
+        loss += -f_i[y[i]] + np.log(sum_i)
+
+        # Compute gradient
+        # dw_j = 1/num_train * \sum_i[x_i * (p(y_i = j)-Ind{y_i = j} )]
+        # Here we are computing the contribution to the inner sum for a given i.
+        for j in range(num_classes):
+            p = np.exp(f_i[j]) / sum_i
+            dW[j, :] += (p - (j == y[i])) * X[:, i]
+
+    # Compute average
+    loss /= num_train
+    dW /= num_train
+
+    # Regularization
+    # loss += 0.5 * reg * np.sum(W * W)
+    # dW += reg * W
+
+    return loss, dW
 
 
 class Softmax:
@@ -48,12 +111,27 @@ class Softmax:
             # instead of excluding the correct class, we include it but subtract
             # 1.0 for each
             # add a small number so that log doesn't compplain
-            misclassification_loss = -np.log(
-                predicted_probability_for_correct_class + 1e-12
-            )
-            # misclassification_loss = -np.log(np.amax(predicted_probabilities, axis=0))
+            # misclassification_loss = -np.log(
+            #     predicted_probability_for_correct_class + 1e-12
+            # )
+            """
+            misclassification_loss = -np.log(np.amax(predicted_probabilities, axis=0))
+            """
+            # inline logic from softmax
+            def loss(scores):
+                maxneg_predicted_score = -np.amax(scores, axis=0)
+                exps = np.sum(np.exp(scores + maxneg_predicted_score), axis=0)
+                return (np.choose(y_train, scores) + maxneg_predicted_score) - np.log(exps)
+
+            misclassification_loss = -loss(predicted_score)
+            # misclassification_loss = -np.choose(y_train, predicted_score) + np.log(
+            #     np.sum(np.exp(predicted_score), axis=0)
+            # )
+
             return (
-                0.5 * reg_const * regularization_loss / self.n_training
+                0.5 * reg_const * regularization_loss
+                # * y_train.shape[0]
+                / self.n_training
                 + np.sum(misclassification_loss) / y_train.shape[0]
             )
 
@@ -102,6 +180,10 @@ class Softmax:
 
         # here n_batch is the batch size
         return avg_regularization_gradient + (net_misclassification_gradient / n_batch)
+        # return (net_misclassification_gradient / n_batch)
+        # return avg_regularization_gradient * n_batch + (
+        #     net_misclassification_gradient / n_batch
+        # )
 
     def _train_batch(self, X_train: np.ndarray, y_train: np.ndarray):
         """Train the classifier for one mini-batch
@@ -116,7 +198,11 @@ class Softmax:
             y_train and update the weights
         """
         # For each incorrect class, sum of the updates with its sign
-        self.w -= self.lr * self.calc_gradient(X_train, y_train)
+        vectorized_gradient = self.calc_gradient(X_train, y_train)
+        # _, non_vectorized_gradient = softmax_loss_naive(self.w, X_train.T, y_train, 0.0)
+        gradient = vectorized_gradient
+        # assert_allclose(vectorized_gradient, non_vectorized_gradient, rtol=1e-3, atol=1e-5)
+        self.w -= self.lr * gradient
 
     def _train_across_batches(self, X_train: np.ndarray, y_train: np.ndarray):
         """Train the classifier for one epoch across mini-batches
