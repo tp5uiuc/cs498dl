@@ -1,0 +1,178 @@
+#+TITLE: Assignment 2
+#+SUBTITLE: CS498DL, Spring 2021
+#+OPTIONS:   H:2 num:t toc:nil date:nil ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER:\usepackage{cleveref}
+#+LATEX_HEADER:\newcommand{\gv}[1]{\ensuremath{\mbox{\boldmath$ #1 $}}}
+#+LATEX_HEADER:\newcommand{\bv}[1]{\ensuremath{\boldsymbol{#1}}}
+#+LATEX_HEADER:\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+#+LATEX_HEADER:\newcommand{\imag}[1]{\mathrm{Im} \left[ #1 \right]}
+#+LATEX_HEADER:\newcommand{\order}[1]{\mathcal O \left( #1 \right)}
+#+LATEX_HEADER:\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+#+LATEX_HEADER:\usepackage{setspace}
+#+LATEX_HEADER:\onehalfspacing
+#+LATEX_CLASS_OPTIONS: [11pt]
+#+LATEX_HEADER:\setminted[powershell]{fontsize=\footnotesize}
+#+LATEX_HEADER:\usepackage[lmargin=0.8in, rmargin=0.8in, tmargin=0.8in, bmargin=0.8in]{geometry}
+#+LATEX_HEADER:\newcommand{\cpp}{\texttt{C++} }
+#+LATEX_HEADER:\definecolor{violet}{RGB}{89,99,225}
+#+LATEX_HEADER:\newcommand{\newcontent}[1]{\textcolor{violet}{#1}}
+
+* Team details
+  | Name                    | NetID            | School | Teamname on Kaggle leaderboard |
+  |-------------------------+------------------+--------+--------------------------------|
+  | Parthasarathy, Tejaswin | tp5@illinois.edu | UIUC   | BennyHarvey                    |
+
+* Implementation
+:PROPERTIES:
+:CUSTOM_ID: sec:impl
+:END:
+  For all the models shown below, we provide options to tune the learning rate
+  \( \alpha \), size of the hidden layers \( h \), number of epochs \( n\), regularization
+  parameter \( \lambda \), and a learning rate
+  decay \( \gamma \). The learning decay rate affect the learning rate in this form
+ \[ \alpha_{i} = \alpha_{i - 1} * \gamma \]
+  where the subscript \( i \) denotes the integral index of the current epoch \( \in [1,
+  n) \).
+
+  For all the models, we first manually found a range of parameters we carry out an extensive search for the best model in
+  the input design space \( \mathcal{R}_{\alpha} \times \mathcal{R}_{h} \times \mathcal{R}_{n} \times
+  \mathcal{R}_{b} \times \mathcal{R}_{\lambda} \times \mathcal{R}_{\gamma} \),
+  where \( \mathcal{R} \) denotes the search range. We then record the loss, weights
+  training, validation accuracies of the model over the epochs. We do not
+  perform any ensemble averaging, due to unavailablity of compute resources. We
+  then look for the parameters with the best output /fitness/,
+  which only considers the validation accuracies. The code for this search can
+  be found in the notebook, and we only include the best
+  obtained results here.
+
+  All the models (including the training algorithms employed) performed well for
+  the following coarse range of values, which we feed into a structured parameter space for
+  finer search, as noted above. We list these parameters below
+  - \( \mathcal{R}_{\alpha} := [0.01, 0.02, 0.05, 0.08] \)
+  - \( \mathcal{R}_{h} := [80, 100, 120] \)
+  - \( \mathcal{R}_{n} := [30, 40] \)
+  - \( \mathcal{R}_{\gamma} := [0.95, 0.99] \)
+  - \( \mathcal{R}_{\lambda} := [0.005, 0.01, 0.02, 0.04] \)
+
+* Two-layer Network Trained with SGD
+  A finer sweep within the coarse search space revealed the following optimal hyperparameters:
+
+ | Category                                 | Value |
+ |------------------------------------------+-------|
+ | Batch size \(b\)                         |   200 |
+ | Learning rate \( \alpha \)               |  0.08 |
+ | Number of epochs \( n\)                  |    30 |
+ | Hidden layer size \(h\)                  |   120 |
+ | Decay rates \( \gamma \)                 |  0.95 |
+ | Regularization coefficient \( \lambda \) |  0.01 |
+
+
+ The results we obtain with the above set of hyperparameters are
+
+ | Category              | Value |
+ |-----------------------+-------|
+ | Validation accuracy % | 53.90 |
+ | Test accuracy %       | 54.36 |
+
+* Three-layer Network Trained with SGD
+  A finer sweep within the coarse search space revealed the following optimal
+  hyperparameters:
+
+  | Category                                 | Value |
+  |------------------------------------------+-------|
+  | Batch size \(b\)                         |   200 |
+  | Learning rate \( \alpha \)               |  0.05 |
+  | Number of epochs \( n\)                  |    30 |
+  | Hidden layer size \(h\)                  |   120 |
+  | Decay rates \( \gamma \)                 |  0.95 |
+  | Regularization coefficient \( \lambda \) |  0.01 |
+
+  The results we obtain with the above set of hyperparameters are
+
+  | Category              | Value |
+  |-----------------------+-------|
+  | Validation accuracy % | 54.40 |
+  | Test accuracy %       | 54.72 |
+
+* Two-layer Network Trained with Adam
+  A finer sweep within the coarse search space revealed the following optimal hyperparameters:
+
+ | Category                                 | Value |
+ |------------------------------------------+-------|
+ | Batch size \(b\)                         |   200 |
+ | Learning rate \( \alpha \)               |  0.01 |
+ | Number of epochs \( n\)                  |    30 |
+ | Hidden layer size \(h\)                  |   100 |
+ | Decay rates \( \gamma \)                 |  0.95 |
+ | Regularization coefficient \( \lambda \) | 0.005 |
+ | \( \beta_1 \)                            |   0.9 |
+ | \( \beta_2 \)                            | 0.999 |
+
+ The results we obtain with the above set of hyperparameters are
+
+ | Category              | Value |
+ |-----------------------+-------|
+ | Validation accuracy % | 54.20 |
+ | Test accuracy %       | 53.13 |
+
+* Three-layer Network Trained with Adam
+  A finer sweep within the coarse search space revealed the following optimal hyperparameters:
+
+ | Category                                 | Value |
+ |------------------------------------------+-------|
+ | Batch size \(b\)                         |   200 |
+ | Learning rate \( \alpha \)               |  0.01 |
+ | Number of epochs \( n\)                  |    40 |
+ | Hidden layer size \(h\)                  |   100 |
+ | Decay rates \( \gamma \)                 |  0.95 |
+ | Regularization coefficient \( \lambda \) | 0.005 |
+ | \( \beta_1 \)                            |   0.9 |
+ | \( \beta_2 \)                            | 0.999 |
+
+ The results we obtain with the above set of hyperparameters are
+
+ | Category              | Value |
+ |-----------------------+-------|
+ | Validation accuracy % | 55.00 |
+ | Test accuracy %       | 53.42 |
+
+@@latex:\newpage@@
+
+* Comparison of SGD and Adam
+  The following shows the comparison of network weights, loss and accuracy as
+  the training progresses for both SGD and Adam optimization algorithms. The
+  results for a two-layered network are shown in [[ref:fig:two_layer]] and those for
+  a network with three hidden layers can be found in [[ref:fig:three_layer]].
+  We observe that
+  - Adam seems to quickly find accurately the direction of loss descent in the
+    initial stages. This reflects in the loss decreasing rapidly in the initial
+    stages, when compared to SGD. This initial rapid descent in loss is followed by a
+    slow decrease, similar to SGD.
+  - Adam always (across the parameter search) seems to initally reduce the
+    network weights, followed by a slow increase. We hypothesize that Adam can
+    better understand the parameter landscape to make a trade-off between
+    cross entropy loss and regularization loss, and it does so at later stages of
+    training. On the other hand, for SGD this behavior was only seen for some
+    parameter sets---usually it reduces the weight norms, which then plateaus
+    out.
+  - It was easier to obtain better performance with Adam initially, without the
+    optimized hyperparameters. But with carefully chosen parameters, our SGD
+    implementation for this particular case of training 2,3 layered networks
+    performs better than Adam.
+  - Additionally, we found many combinations of near-optimal parameter sets that
+    performs well on SGD. With Adam, the /best/ performance only occured at specific
+	parameter sets---a minor variation of parameters degrades performance
+    considerably (even dropping to as low as 40% !). We are unsure if this
+    behavior is seen in training other networks outside this academic
+    exercise---that is, this behavior may be pathological to this particular
+    example of training two and three layered networks.
+
+  #+NAME:fig:two_layer
+  #+CAPTION: Comparison of SGD and Adam metrics for a two-layer network
+  #+ATTR_LATEX: :width 0.9\textwidth
+  [[file:images/two_layer_comparison.pdf]]
+
+  #+NAME:fig:three_layer
+  #+CAPTION: Comparison of SGD and Adam metrics for a three-layer network
+  #+ATTR_LATEX: :width 0.9\textwidth
+  [[file:images/three_layer_comparison.pdf]]
