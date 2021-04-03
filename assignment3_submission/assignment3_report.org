@@ -1,0 +1,278 @@
+#+TITLE: Assignment 3
+#+SUBTITLE: CS498DL, Spring 2021
+#+OPTIONS:   H:3 num:t toc:nil date:nil ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER:\usepackage{cleveref}
+#+LATEX_HEADER:\newcommand{\gv}[1]{\ensuremath{\mbox{\boldmath$ #1 $}}}
+#+LATEX_HEADER:\newcommand{\bv}[1]{\ensuremath{\boldsymbol{#1}}}
+#+LATEX_HEADER:\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+#+LATEX_HEADER:\newcommand{\imag}[1]{\mathrm{Im} \left[ #1 \right]}
+#+LATEX_HEADER:\newcommand{\order}[1]{\mathcal O \left( #1 \right)}
+#+LATEX_HEADER:\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+#+LATEX_HEADER:\usepackage{setspace}
+#+LATEX_HEADER:\onehalfspacing
+#+LATEX_CLASS_OPTIONS: [11pt]
+#+LATEX_HEADER:\setminted[powershell]{fontsize=\footnotesize}
+#+LATEX_HEADER:\usepackage[lmargin=0.8in, rmargin=0.8in, tmargin=0.8in, bmargin=0.8in]{geometry}
+#+LATEX_HEADER:\newcommand{\cpp}{\texttt{C++} }
+#+LATEX_HEADER:\definecolor{violet}{RGB}{89,99,225}
+#+LATEX_HEADER:\newcommand{\newcontent}[1]{\textcolor{violet}{#1}}
+
+* Team details
+  | Name                    | NetID            | School | Team-name on Kaggle leaderboard |
+  |-------------------------+------------------+--------+---------------------------------|
+  | Parthasarathy, Tejaswin | tp5@illinois.edu | UIUC   | BennyHarvey                     |
+
+* Part-1A: Pre-designed network for multi-label classification
+:PROPERTIES:
+:CUSTOM_ID: sec:part1a
+:END:
+
+In this part, we trained a neural network both by training from
+scratch and fine-tuning. We present the results here.
+
+** Simple classifier
+*** Test mAP
+	The mAP for the test set after running the optimization for 20 epochs is *0.1828*.
+*** History of loss and mAP over epochs
+	We show the loss and mAP history in [[ref:fig:simple_classifier_loss]]  and
+	ref:fig:simple_classifier_map respectively.
+
+#+NAME:fig:simple_classifier_loss
+#+CAPTION: History of loss for the simple classifier
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/simple_classifer_loss.png]]
+
+#+NAME:fig:simple_classifier_map
+#+CAPTION: History of map for the simple classifier
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/simple_classifer_mAP.png]]
+*** Analysis
+	- The model cannot generalize to data-sets. This is indicated by the loss
+      for the validation set stagnating or even increasing while the loss for
+      the training set decreases. This hints that the network is already over-fitting.
+	- This over-fitting consequently results in a poor mAP value of < 0.2 for the validation
+      data, even though the mAP increases for the training data.
+	- I confirmed offline that running this longer (for 100 epochs) did not
+      improve performance dramatically (the mAP value I obtained was 0.2341).
+
+** AlexNet from scratch
+*** Test mAP
+	The mAP for the test set after running the optimization for 20 epochs is *0.0953*.
+*** History of loss and mAP over epochs
+	We show the loss and mAP history in [[ref:fig:alexnet_scratch_loss]]  and
+	ref:fig:alexnet_scratch_map respectively.
+
+#+NAME:fig:alexnet_scratch_loss
+#+CAPTION: History of loss for AlexNet trained from scratch
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/alexnet_from_scratch_loss.png]]
+
+#+NAME:fig:alexnet_scratch_map
+#+CAPTION: History of map for AlexNet trained from scratch
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/alexnet_from_scratch_mAP.png]]
+
+** AlexNet pre-trained
+*** Test mAP
+	The mAP for the test set after running the optimization for 20 epochs is *0.6821*.
+*** History of loss and mAP over epochs
+	We show the loss and mAP history in [[ref:fig:alexnet_pretrained_loss]]  and
+	ref:fig:alexnet_pretrained_map respectively.
+
+#+NAME:fig:alexnet_pretrained_loss
+#+CAPTION: History of loss for pre-trained AlexNet
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/alexnet_pretrained_loss.png]]
+
+#+NAME:fig:alexnet_pretrained_map
+#+CAPTION: History of map for pre-trained AlexNet
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/alexnet_pretrained_mAP.png]]
+
+*** Analysis on differences to training from scratch
+	- The pre-trained network performs much better than training from scratch,
+      with a mAP of *0.6821*.
+	- The loss for the pre-trained version is lower, but still on the same order
+      of magnitude.
+	- Even pre-training doesn't help to fully generalize to new data-sets. This
+	  is indicated by a saturating mAP/loss curve for the pre-trained version.
+	  This is not seen in the non-pre-trained version, at least in the short
+	  optimization campaigns we run. Thus the pre-trained AlexNet overfits.
+
+* Part-1B: Self designed network for multi-label classification
+:PROPERTIES:
+:CUSTOM_ID: sec:part1b
+:END:
+
+In this part, we design a neural network to perform better than the simple
+classifier of [[ref:sec:part1a]] in the multi-label classification task.
+
+Did you upload final CSV file on Kaggle: *Yes*
+
+** Best mAP on Kaggle
+   My best mAP on Kaggle is *0.4126*
+** Factors which helped improve my model
+   - Data augmentation, including random crops, flips and color jitter.
+   - Replacing 5x5 convolution layers in Simple classifier by two 3x3
+     convolution layers (inspired by *VGGnet*)
+   - Widening the number of channels deeper into the network, and using 1x1
+     convolution layers to connect it to the classifier architecture (inspired
+     by *VGGnet* and *NiN*.
+   - Batch normalization after all 2D convolution layers (inspired by *GoogleNet v3*)
+   - Increasing width of linear layers in the classifier architecture for more
+     generalization power (inspired by *AlexNet*)
+   - Average pooling to prevent explosion in the number of parameters resulting
+     from wider linear layers (inspired by *NiN*)
+** Table for final architecture
+  | Layer No. | Layer Type        | Kernel size | Input/Output dimension           | Input/Output channels |
+  |-----------+-------------------+-------------+----------------------------------+-----------------------|
+  |         1 | Conv2d            | 3           | 227/225                          | 3/64                  |
+  |         2 | BatchNorm2d       | -           | 225/225                          | -                     |
+  |         3 | ReLU              | -           | 225/225                          | -                     |
+  |         4 | MaxPool2d         | 2           | 225/112                          | -                     |
+  |         5 | Conv2d            | 3           | 112/110                          | 64/128                |
+  |         6 | BatchNorm2d       | -           | 110/110                          | -                     |
+  |         7 | ReLU              | -           | 110/110                          | -                     |
+  |         8 | MaxPool2d         | 2           | 110/55                           | -                     |
+  |         9 | Conv2d            | 3           | 55/53                            | 128/256               |
+  |        10 | BatchNorm2d       | -           | 53/53                            | -                     |
+  |        11 | ReLU              | -           | 53/53                            | -                     |
+  |        12 | MaxPool2d         | 2           | 53/26                            | -                     |
+  |        13 | Conv2d            | 1           | 26/26                            | 256/128               |
+  |        14 | BatchNorm2d       | -           | 26/26                            | -                     |
+  |        15 | ReLU              | -           | 26/26                            | -                     |
+  |        16 | AdaptiveAvgPool2d | -           | 26/5                             | -                     |
+  |        17 | Flatten           | -           | \(128 \times 5 \times 5\) / 3200 | -                     |
+  |        18 | Linear            | -           | 3200/1024                        | -                     |
+  |        19 | ReLU              | -           | 1024/1024                        | -                     |
+  |        20 | Linear            | -           | 1024/420                         | -                     |
+  |        21 | ReLU              | -           | 420/420                          | -                     |
+  |        22 | Linear            | -           | 420/21                           | -                     |
+
+** Ablation study
+  The initial network provided to you can be considered as the BaseNet. A very
+  important part of deep learning is understanding the ablation studies of
+  various networks. So we would like you to do a few experiments. Note, this
+  doesn’t need to be very exhaustive and can be in a cumulative manner in an
+  order you might prefer. We fill in the following table :
+
+  | Serial # | Model Architecture                                              | Best mAP on test set |
+  |----------+-----------------------------------------------------------------+----------------------|
+  | v0       | BaseNet                                                         |               0.2341 |
+  | v1       | BaseNet replacing 5x5 with two 3x3 layers  + increased features |               0.2429 |
+  | v2       | v1+ batchnorm                                                   |               0.3791 |
+  | v3       | v2 + wider classifier                                           |               0.4056 |
+  | v4       | v3 + average pooling                                            |             *0.4126* |
+  | v5       | v4 + dropout in classifier                                      |               0.3865 |
+
+* Part-2: Object Detection by YOLO
+:PROPERTIES:
+:CUSTOM_ID: sec:part2
+:END:
+
+** Best mAP on Kaggle
+   My best mAP on Kaggle is *0.49451*
+
+** CSV file on Kaggle
+   Did you upload final CSV file on Kaggle: *Yes*
+
+** Final loss
+   My final loss value : *1.802*
+
+** What didn't work
+   What did not work in my code(if anything): *NIL*
+
+@@latex:\newpage@@
+** Sample Images from my detector from PASCAL VOC:
+*** Correctly classified images
+	Here are some samples of correctly classified images.
+	- Let's start simple---with one object.
+#+NAME:fig:correct_car
+#+CAPTION: A correctly classified car
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/correct_car.pdf]]
+@@latex:\clearpage@@
+
+	- The detector also recognizes occluded objects.
+#+NAME:fig:correct_person_bike
+#+CAPTION: A correctly classified bike and person, with bubble occlusions
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/correct_person_bike.pdf]]
+@@latex:\clearpage@@
+
+	- It also identifies /components/ of a /continuous/ object, like the sofa below. It
+      recognizes three different "sofa parts", which are themselves sofas and
+      and also marks their sum---the whole sofa!
+#+NAME:fig:correct_sofa
+#+CAPTION: A correctly classified sofa set
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/correct_sofa.pdf]]
+@@latex:\clearpage@@
+
+*** Incorrectly classified images
+	Here are some samples of incorrectly classified images. These are
+	illustrative to determine the mode of failure of my detector.
+
+	- Let's start simple again---with one object. Here the plane which occupies most
+      of the image is not recognized, while the detector picks up something that
+      looks like a bottle. I suspect that this behavior is a result of the plane
+      /model/ here---its a propelled plane, with some of its components occluded
+      by the background, making it hard for the detector to recognize it.
+#+NAME:fig:incorrect_plane
+#+CAPTION: An incorrectly classified plane
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/incorrect_plane.pdf]]
+@@latex:\clearpage@@
+
+	- Sometimes occlusions confuse the detector, as seen from this person--horse
+      image below. The detector only recognizes the front part of the horse,
+      maybe due to occlusion by the person. It also hallucinates an additional
+      person---does it misrecognise the person + back part of the horse as a
+      centaur?! Additionally, it fails to pick up cars in the image background.
+
+#+NAME:fig:incorrect_person_horse
+#+CAPTION: An incorrectly classified horse and person, with occlusions
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/incorrect_person_horse.pdf]]
+@@latex:\clearpage@@
+
+	- Lastly, it fails in more complex scenes such as the one shown below. The
+      detector picks up tables as chairs (it has probably learnt to recognize
+      the four stems), keychains as potted-plants (to be fair, even I was
+      confused as to what it is) and doesn't recognize sofas in the background.
+      I think this failure mode in complex scenes can potentially be overcome
+      with more training.
+#+NAME:fig:incorrect_chairs
+#+CAPTION: Incorrectly classified chairs
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/incorrect_chairs.pdf]]
+@@latex:\clearpage@@
+
+** Extra credit : YOLO on YOLO
+   How does YOLO perform on YOLO? Here are three results
+	- Let's start simple---with one person, shown in [[ref:fig:correct_yolo_1]]. The
+      detector seems to do a good job in this case.
+#+NAME:fig:correct_yolo_1
+#+CAPTION: A correctly classified person in the YOLO video
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/prediction_for_yolo_1.pdf]]
+@@latex:\clearpage@@
+
+	- Let's now try multiple people, numbering three, shown in
+      [[ref:fig:correct_yolo_3]]. The classifer detects four people in this case!
+      Also the bounding box for Andy Samberg seems not tight.
+#+NAME:fig:correct_yolo_3
+#+CAPTION: Three correctly classified people, and one more from the Shadowrealm\textsuperscript{TM}, in the YOLO video
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/prediction_for_yolo_3.pdf]]
+@@latex:\clearpage@@
+
+	- Let's now try a picture with two different categories---Andy and a dog---shown in
+      [[ref:fig:correct_yolo_dog]]. Once again, the classifer detects an additional
+      person, probably from the Shadowrealm\textsuperscript{TM}. Also, the cute
+      dog's bounding box is not that tight.
+#+NAME:fig:correct_yolo_dog
+#+CAPTION: Correctly classified Andy and dog, and one more from the Shadowrealm\textsuperscript{TM}, in the YOLO video
+#+ATTR_LATEX: :width 0.9\textwidth
+[[file:images/prediction_for_yolo_dog.pdf]]
+@@latex:\clearpage@@
