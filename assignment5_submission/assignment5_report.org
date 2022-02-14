@@ -1,0 +1,99 @@
+#+TITLE: Assignment 5
+#+SUBTITLE: CS498DL, Spring 2021
+#+OPTIONS:   H:3 num:t toc:nil date:nil ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER:\usepackage{cleveref}
+#+LATEX_HEADER:\newcommand{\gv}[1]{\ensuremath{\mbox{\boldmath$ #1 $}}}
+#+LATEX_HEADER:\newcommand{\bv}[1]{\ensuremath{\boldsymbol{#1}}}
+#+LATEX_HEADER:\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+#+LATEX_HEADER:\newcommand{\imag}[1]{\mathrm{Im} \left[ #1 \right]}
+#+LATEX_HEADER:\newcommand{\order}[1]{\mathcal O \left( #1 \right)}
+#+LATEX_HEADER:\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+#+LATEX_HEADER:\usepackage{setspace}
+#+LATEX_HEADER:\onehalfspacing
+#+LATEX_CLASS_OPTIONS: [11pt]
+#+LATEX_HEADER:\setminted[powershell]{fontsize=\footnotesize}
+#+LATEX_HEADER:\usepackage[lmargin=0.8in, rmargin=0.8in, tmargin=0.8in, bmargin=0.8in]{geometry}
+#+LATEX_HEADER:\newcommand{\cpp}{\texttt{C++} }
+#+LATEX_HEADER:\definecolor{violet}{RGB}{89,99,225}
+#+LATEX_HEADER:\newcommand{\newcontent}[1]{\textcolor{violet}{#1}}
+
+* Team details
+  | Name                    | NetID            | School | Team-name on Kaggle leaderboard |
+  |-------------------------+------------------+--------+---------------------------------|
+  | Parthasarathy, Tejaswin | tp5@illinois.edu | UIUC   | BennyHarvey                     |
+
+* Deep Reinforcement learning
+:PROPERTIES:
+:CUSTOM_ID: sec:part1a
+:END:
+
+In this part, we trained an agent for playing Breakout\textsuperscript{TM} in an
+ATARI emulator using deep reinforcement learning. We implemented two algorithms
+for training the agent---first using Deep Q-Networks (*DQN*) and second using
+Double Deep Q-Networks (*DDQN*). We present results from both these training
+instances here.
+
+** Mean reward reached
+*** DQN
+	For *DQN*, the training was stopped at \( \sim 2500 \) epochs. The last mean
+	reward reached was *8.53*. The highest ever mean reward reached was *9.27*.
+
+*** DDQN
+	For *DDQN*, the training was stopped at \( \sim 2000 \) epochs. The last mean
+	reward reached was *12.14*. The highest ever mean reward reached was *12.52*.
+
+	@@latex:\noindent@@ In both these cases, we note that the mean rewards could be higher as I
+	stopped training early on.
+
+** Uploaded Saved DQN/DDQN Model on Compass
+   *Yes*
+
+** Uploaded your Agent.py and/or Agent_double.py file on Compass
+   *Yes*
+
+** Plot of Mean Evaluation Reward for the model that reaches the target score (Either DQN or DDQN):
+
+   @@latex:\clearpage@@
+#+NAME:fig:reward
+#+CAPTION: Mean Evaluation Reward for the trained models. DQN is marked in orange and DDQN is marked in blue.
+#+ATTR_LATEX: :height 0.4\textheight
+[[file:images/training.eps]]
+
+** Provide a few sentences to analyze the training process and talk about some implementation details:
+   With regards to the training process for both DQN  and
+   DDQN in [[ref:fig:reward]], we see that the
+   mean rewards are flat (and show no sign of improvement) in the first \( \sim
+   1000 \) epochs. We can explain this behavior by considering the trade-offs
+   between exploration and exploitation common in reinforcement learning scenarios.
+   During this initial period, we do not exploit any knowledge that we
+   have, rather we explore the environment for more interesting and rewarding
+   plays. Once this initial exploration is done, we have a rich transition
+   history \(s-a-r-s^\prime\) stored
+   in our replay buffers which we then use to sample and train our deep networks.
+   This delayed training reflects in a strong uptick of the reward values,
+   starting around 1000 epochs.
+
+   In this training phase, we see that DDQN performs better than DQN, for the
+   same neural network architecture. The explanation for this behavior can be
+   traced back to the original paper, where DQN is shown to overestimate Q
+   values (due to noise arising from transition), which in turn causes biases in
+   the training procedure. DDQN fixes this bias by utilizing two networks, one
+   for estimation of Q values (target network) based on actions drawn from the
+   policy network. This results in a more stable and directed training, which we see in
+   [[ref:fig:reward]] by DDQN having higher overall rewards.
+
+   Regarding implementation details, we implement the models in =PyTorch=. For
+   the DQN, we update the temporal difference targets using the current snapshot
+   of the network (i.e. the network update frequency is 1). For double DQN, we update
+   the target network once every 1000 frames. Additionally, we utilize the
+   default hyper-parameters shipped with the starter code. As the
+   networks learn well with these hyper-parameters, we spent minimal effort in
+   tuning them.
+
+* Extra Credit
+** How did you reach a mean score of 11? What changes have you made?
+   Instead of vanilla DQN, we utilized a double DQN (DDQN) network. The
+   hyper-parameters were retained from the original vanilla DQN case. We update
+   the target network once every 1000 frames of playing
+   Breakout\textsuperscript{TM}. Upon training for sufficiently long, we see
+   that our network can comfortably reach a mean score of more than 11.
