@@ -1,0 +1,399 @@
+#+TITLE: Assignment 4
+#+SUBTITLE: CS498DL, Spring 2021
+#+OPTIONS:   H:3 num:t toc:nil date:nil ::t |:t ^:{} -:t f:t *:t <:t
+#+LATEX_HEADER:\usepackage{cleveref}
+#+LATEX_HEADER:\newcommand{\gv}[1]{\ensuremath{\mbox{\boldmath$ #1 $}}}
+#+LATEX_HEADER:\newcommand{\bv}[1]{\ensuremath{\boldsymbol{#1}}}
+#+LATEX_HEADER:\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+#+LATEX_HEADER:\newcommand{\imag}[1]{\mathrm{Im} \left[ #1 \right]}
+#+LATEX_HEADER:\newcommand{\order}[1]{\mathcal O \left( #1 \right)}
+#+LATEX_HEADER:\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+#+LATEX_HEADER:\usepackage{setspace}
+#+LATEX_HEADER:\onehalfspacing
+#+LATEX_CLASS_OPTIONS: [11pt]
+#+LATEX_HEADER:\usepackage[font=itshape]{quoting}
+#+LATEX_HEADER:\setminted[powershell]{fontsize=\footnotesize}
+#+LATEX_HEADER:\usepackage[lmargin=0.8in, rmargin=0.8in, tmargin=0.8in, bmargin=0.8in]{geometry}
+#+LATEX_HEADER:\newcommand{\cpp}{\texttt{C++} }
+#+LATEX_HEADER:\definecolor{violet}{RGB}{89,99,225}
+#+LATEX_HEADER:\newcommand{\newcontent}[1]{\textcolor{violet}{#1}}
+
+* Team details
+  | Name                    | NetID            | School | Team-name on Kaggle leaderboard |
+  |-------------------------+------------------+--------+---------------------------------|
+  | Parthasarathy, Tejaswin | tp5@illinois.edu | UIUC   | BennyHarvey                     |
+
+* Part-1: GANs
+:PROPERTIES:
+:CUSTOM_ID: sec:part1
+:END:
+
+In this part, we trained a generative adversarial neural network (GAN) by
+training using two different loss formulations (NSGAN, LSGAN). We present the
+results obtained here. For reference, we ran the networks for 20 epochs (20000
+iterations) on Google Colaboratory servers.
+
+** Final results
+   *Q* : Show final results from training both your GAN and LSGAN (give the
+   final 4x4 grid of images for both).
+*** (NS)GAN
+	We show the network outputs as images at the 5000, 10000, 15000, 20000
+	iteration marks in [[ref:fig:nsgan_results]].
+
+#+NAME:fig:nsgan_results
+#+CAPTION: Output of the NSGAN network after (a) 5000 iterations, (b) 10000 iterations, (c) 15000 iterations and (d) 20000 iterations
+#+ATTR_LATEX: :width 1.00\textwidth
+[[file:images/nsgan_results.eps]]
+
+*** LSGAN
+	We show the network outputs as images at the 5000, 10000, 15000, 20000
+	iteration marks in [[ref:fig:lsgan_results]].
+
+#+NAME:fig:lsgan_results
+#+CAPTION: Output of the LSGAN network after (a) 5000 iterations, (b) 10000 iterations, (c) 15000 iterations and (d) 20000 iterations
+#+ATTR_LATEX: :width 1.00\textwidth
+[[file:images/lsgan_results.eps]]
+
+** Analysis
+:PROPERTIES:
+:CUSTOM_ID: subsec:analysis
+:END:
+   *Q* : Discuss any differences you observed in quality of output or behavior
+   during training of the two GAN models.
+
+   @@latex:\noindent@@ *A* : We observed that:
+   - Qualitatively both NSGAN and LSGAN perform similarly and differences are
+     minor. Overall the images generated from LSGAN seem somewhat better.
+   - LSGAN training seems to be somewhat unstable. During training it sometimes /forgets/
+     what it has learnt (accompanied by dramatic drops in the loss). After this
+     event the network makes a recovery and starts generating legible faces once
+     more. We believe this is an (extremely) pathological case of mode collapse.
+     We exemplify this behavior with the images in [[ref:fig:lsgan_collapse]] for
+     our LSGAN network around the 15000 iteration mark. Post recovery, we see
+     that it generates faces but with certain similarities.
+
+#+NAME:fig:lsgan_collapse
+#+CAPTION: Output of the LSGAN network (a) before, (b) during and (c) after the collapse event
+#+ATTR_LATEX: :height 0.2\textheight
+[[file:images/lsgan_failure.eps]]
+
+** Mode collapse
+   *Q* : Do you notice any instances of mode collapse in your GAN training
+   (especially early in training)? Show some instances of mode collapse (if any)
+   from your training output.
+
+   @@latex:\noindent@@ *A* : Early in GAN training, we observe mode collapse as
+   seen in [[ref:fig:early_mode_collapse]] for both the (a) NSGAN and (b) LSGAN
+   variants, corresponding to iterations 600 and 1000 respectively.
+
+#+NAME:fig:early_mode_collapse
+#+CAPTION: Instances of mode-collapse early on in the training for the (a) NSGAN and (b) LSGAN networks
+#+ATTR_LATEX: :height 0.2\textheight
+[[file:images/early_mode_collapse.eps]]
+
+   Additionally for LSGAN, due to the pathological mode collapse detailed in
+   [[ref:subsec:analysis]], we observe similarities in faces generated immediately
+   after the collapse event at iteration number 16800 shown in [[ref:fig:late_mode_collapse]].
+
+#+NAME:fig:late_mode_collapse
+#+CAPTION: A mode-collapse late in the training for LSGAN, arising from instabilities in optimization
+#+ATTR_LATEX: :height 0.18\textheight
+[[file:images/lsgan_late_mode_collapse.png]]
+
+** Spectral normalization
+   *Q* : Discuss briefly how/whether spectral normalization helps generate
+   higher quality images in your implementation. Ideally, you should show
+   samples from models with and without normalization.
+
+   @@latex:\noindent@@ *A* : With spectral normalization, images generated are
+   more "sharper" and have more "continuous" features. We highlight this by
+   comparing samples in [[ref:fig:spectral_norm]] (a) with and (b) without spectral
+   normalization. In the images generated without spectral normalization faces
+   seem to be non-smooth composites of multiple features drawn from distinct
+   celebrity faces---hence they tend to appear either "blurred" out or
+   non-human. Thus images generated are comparatively better when spectral
+   normalization is introduced.
+
+#+NAME:fig:spectral_norm
+#+CAPTION: Samples from two networks trained (a) with and (b) without enabling spectral normalization
+#+ATTR_LATEX: :height 0.25\textheight
+[[file:images/spectral_normalization.eps]]
+
+** Extra credit
+   *Q* : If you completed the extra credit for this portion, explain
+   what you did (describing all model changes and hyperparameter settings) and
+   provide output images.
+
+  @@latex:\noindent@@ *A* : We train our LSGAN network on the full resolution
+  \( 128 \times 128\) celebrity faces data. For this training task, we retain most of our
+  discriminator and generator architectures.
+  To effectively sample the \( 128 \times 128\) resolution data, we modify our
+  discriminator architecture by adding another convolution, batchnorm and
+  activation layer at the end (before the \( 1 \times 1 \) convolutions) with 2048 output
+  features (and same kernel sizes, strides, paddings as other layers). In this
+  way, we retain the DCGAN formulation. Similar changes are made to the
+  generator as well. Finally, for training we retain the same hyperparameters used in
+  the case of \( 64 \times 64\) resolution.
+
+  Before presenting the results, we note that a \( 2 \times 2\) max pooling layer in the
+  discriminator (and an unpooling layer in the generator) will also lead to a
+  capable architecture. But since this detracts from the DCGAN formulation, we
+  choose to not include pooling layers.
+
+#+NAME:fig:lsgan_128_failure
+#+CAPTION: Output of the LSGAN network (a) before, (b) during and (c) after the collapse event, while training on \( 128 \times 128\) celebrity faces data.
+#+ATTR_LATEX: :height 0.2\textheight
+[[file:images/lsgan_128_failure.eps]]
+
+  Unfortunately, the effect of mode collapse is more prominent in this case
+  and as a result the training had little success. Even here, the network /forgets/
+  what it had learnt and undergoes a pathological collapse. We shown this in
+  [[ref:fig:lsgan_128_failure]](a) before and (b) during the collapse. Unlike the
+  low-resolution case in which the network recovers post collapse, in this case
+  the network is deficient in recovery. As a result, the faces generated are
+  seemingly based on a template, long after the collapse event. This is shown in
+  [[ref:fig:lsgan_128_failure]](c). We did not train for long due to limitations on
+  compute on Google Colaboratory servers.
+
+* Part-2: Generation
+:PROPERTIES:
+:CUSTOM_ID: sec:part2_generation
+:END:
+
+In this part, we design a RNN to generate text from the collected works of
+Shakespeare.
+** Hyperparameter tuning
+   We performed hyperparameter tuning over the learning rate (\(10^{-2},
+   10^{-3}, 3 \times 10^{-4}\)),
+   number of hidden layers in the RNN type (2, 3) and the RNN type (Vanilla RNN,
+   LSTM, GRU). Performance was good across the hyperparameter range tested as
+   the generated text is legible.
+
+** Hyperparameters for best architecture
+   *Q* : Give the hyperparameters for your best network on classification task below.
+   Note any other changes you made to the base network in addition to the
+   hyperparameters listed in the table below.
+
+  | Hyperparameter     | Value                  |
+  |--------------------+------------------------|
+  | RNN type:          | GRU                    |
+  | Number of layers:  | 2                      |
+  | Hidden layer size: | 100                    |
+  | Learning rate:     | \( 3 \times 10^{-4} \) |
+
+** Example output from network
+   *Q* : Give an example 1000 character output from your network
+
+   \begin{quoting}
+Third since what then follow to thy father's son advise
+That I have mantain. Here harm unto your eye.
+
+PERDICENHENE:
+Why I'll spling, we would mssing; yet walls,
+Which true knows to bid fishard that withnest;
+And fare his curse, Citizen:
+He is thou tonk'd in the hands fears in the gentle cheer,
+And we have not man lomnly changed with the converl'd,
+And tell to my countence be heart then,
+My lord, sir, if I the sparly thu crull me live
+With the sentent up to speak all they speicely.
+
+QUEEN GER:
+Now all the heart, my hands of sweet that have help,
+And brave be shall best condemns are year.
+
+KING RICHARD III:
+Doth so mind to trust, be a bound.
+So should we do, pack the feast, he came of the traitor than he cry.
+
+CORIOLANUS:
+O thou wilt know to crield the days.
+
+LORD AUTOLYCUS:
+Noble state, about she know here
+I can me thou art Romeo.
+
+CLOULIO:
+That strail him shall not threeming than her heart,
+To, my father? what upon the hands alack,
+Is they will been blessed fair man's hast!
+An in resord
+   \end{quoting}
+
+** Training history
+   *Q*: Insert the training & test loss plot from your RNN generation notebook below:
+
+#+NAME:fig:generator_loss_history
+#+CAPTION: Training loss history of RNN for generation task
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:images/rnn_generator_loss_report.pdf]]
+
+** Extra credit
+
+*** Dataset
+	We train on the entirety of the Linux codebase (as of November 22 2016),
+	written in C. For reference, the codebase contained 6,546,665 characters,
+	and 97 of them are unique. The dataset is associated with the following paper:
+	\begin{quoting}
+	De Boom C., Demeester T., Dhoedt B.: "Character-level Recurrent Neural Networks in Practice: Comparing Training and Sampling Schemes". Neural Computing and Applications (2018).
+	\end{quoting}
+
+*** Example from training dataset
+ 	\begin{verbatim}
+ed);
+}
+
+static inline void mask_ack_irq(struct irq_desc *desc)
+{
+	if (desc->irq_data.chip->irq_mask_ack)
+		desc->irq_data.chip->irq_mask_ack(&desc->irq_data);
+	else {
+		desc->irq_data.chip->irq_mask(&desc->irq_data);
+		if (desc->irq_data.chip->irq_ack)
+			desc->irq_data.chip->irq_ack(&desc->irq_data);
+	}
+	irq_state_set_masked(desc);
+}
+
+void mask_irq(struct irq_desc *desc)
+{
+	if (desc->irq_data.chip->irq_mask) {
+		desc->irq_data.chip->irq_mask(&desc->irq_data);
+		irq_state_set_masked(desc);
+	}
+}
+
+void unmask_irq(struct irq_desc *desc)
+{
+	if (desc->irq_data.chip->irq_unmask) {
+		desc->irq_data.chip->irq_unmask(&desc->irq_data);
+		irq_state_clr_masked(desc);
+	}
+}
+
+void unmask_threaded_irq(struct irq_desc *desc)
+{
+	struct irq_chip *chip = desc->irq_data.chip;
+
+	if (chip->flags & IRQCHIP_EOI_THREADED)
+		chip->irq_eoi(&desc->irq_data);
+
+	if (chip->irq_unmask) {
+		chip->irq_unmask(&desc->irq_data);
+		irq_state_clr_masked(desc);
+	}
+}
+
+/*
+ *	handle_nested_irq - Handle a nested irq from a irq thr
+  	\end{verbatim}
+*** Hyperparameters for training
+
+   | Hyperparameter     | Value                  |
+   |--------------------+------------------------|
+   | RNN type:          | GRU                    |
+   | Number of layers:  | 2                      |
+   | Hidden layer size: | 100                    |
+   | Learning rate:     | \( 3 \times 10^{-4} \) |
+*** Network output example
+ 	\begin{verbatim}
+struct perf_event *event;
+
+		contixup_only = check_ring_buffer;
+	int ret;
+	if (tsk)
+		return;
+
+	while (!const constamp, cpu_outprob) &&
+	      unsigned int irq_cpuset *worker->mutex);
+	}
+
+	return 0;
+}
+
+/**
+ * rbg->read_irqs().  Return the semaphore has been file */
+			if (err)
+		return -ENOMEM;
+			break;
+	/* Must should time the initialized a we as the num)
+{
+	struct klp_start = cpu_buff_table = alloc_flags = curr("%s\n",
+	},
+	},
+	{ edutex);
+	list_regs = regid_node = 0;
+	rcu_release_namesched_clear_traint_waiter->mk->kred_cpusprogr_timer_init(der_cpu,
+					[LLAD) || !timev->name, HRTIMER_STATE_PUSTY_READ, encode);
+		}
+		if (!cpumask)
+		put_add_trace = &tk_command;
+	int ret = task_struct *task = -ENOMEM;
+}
+
+/*
+ * Returns insn->ftrace the head the file is names
+ * have is a parameters.
+ *
+ * This spind the time to resched_entity state because the load the wait first is needs we symbol avoid to a notify that it the allowed syncirqs avall are some the hopg the executlock to the migration
+ * in t
+	\end{verbatim}
+
+
+* Part-2: Classification
+:PROPERTIES:
+:CUSTOM_ID: sec:part2_classification
+:END:
+
+In this part, we design a RNN to classify text based on language, based on the
+Bible across 20 different languages.
+** Hyperparameter tuning
+   We performed hyperparameter tuning over the learning rate (\(10^{-2},
+   10^{-3}, 3 \times 10^{-4}\)),
+   number of hidden layers in the RNN type (2, 3), size of the hidden layer (64,
+   128, 256), chunk length (50, 100) and the RNN type (Vanilla RNN,
+   LSTM, GRU).
+
+** Hyperparameters for best architecture
+   *Q* : Give the hyperparameters for your best network on classification task
+   below. Note any other changes you made to the base network in addition to the
+   hyperparameters listed in the table below.
+
+  | Hyperparameter     | Value |
+  |--------------------+-------|
+  | RNN type:          |   GRU |
+  | Number of layers:  |     2 |
+  | Hidden layer size: |   128 |
+  | Chunk length       |    50 |
+  | Learning rate:     |  f(i) |
+
+  where \( f \) above is a function of only the epoch number (\(i\)) and is
+  described as
+
+  \begin{equation}
+	f(i) =
+	\begin{cases}
+	  \begin{alignedat}{3}
+		&3 \times 10^{-3} \quad &&0 \leq i < 2000 \\
+		&1 \times 10^{-3} \quad &&2000 \leq i < 4000 \\
+		&5 \times 10^{-4}  \quad &&4000 \leq i < 6000 \\
+		&1 \times 10^{-4}  \quad &&6000 \leq i < 8000 \\
+	  \end{alignedat}
+	\end{cases}
+  \end{equation}
+
+** Accuracy
+*Q* : You should reach the Kaggle accuracy benchmark with your Kaggle
+ submission. Your notebook evaluation results should be similar to your
+ performance on Kaggle. Insert the confusion matrix image outputted from your
+ best model, and report the corresponding accuracy.
+
+ @@latex:\noindent@@ The test accuracy obtained was *0.918* and the confusion matrix is shown below
+ in [[ref:fig:confusion_matrix]]. The model performs fairly well (bright diagonals).
+ It however has difficulty in recognizing similar languages (Norwegian--Danish
+ is the most prominent example).
+
+#+NAME:fig:confusion_matrix
+#+CAPTION: Confusion matrix from the RNN
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:images/confusion_matrix.png]]
